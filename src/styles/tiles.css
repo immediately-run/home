@@ -34,11 +34,12 @@
   padding: 8px 14px;
 }
 
-/* The /NEWS tile pins its pill to the bottom edge, as the artboard draws it. */
-.tile--link-end .tile__link {
-  margin-top: auto;
-  padding-top: 12px;
-}
+/* The /NEWS tile pins its pill to the bottom edge, as the artboard draws it:
+   auto margin pins when there is free space, the fixed gap holds when there
+   is none — and the pill's own padding stays uniform with its /MODEL twin. */
+.tile--link-end .tile__link { margin-top: auto; }
+.tile--link-end .tile__title,
+.tile--link-end .tile__body { margin-bottom: 12px; }
 
 .page--mobile .tiles { grid-template-columns: 1fr; }
 
