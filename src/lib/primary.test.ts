@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { primary } from './primary';
 
 describe('primary', () => {
-  it('no recents puts the gradient on the create door', () => {
+  it('an absent record puts the gradient on the create door', () => {
     expect(primary({ hasRecents: false, omniboxOpen: false })).toBe('create');
   });
 
