@@ -34,10 +34,17 @@
   padding: 8px 14px;
 }
 
+/* The /NEWS tile pins its pill to the bottom edge, as the artboard draws it. */
+.tile--link-end .tile__link {
+  margin-top: auto;
+  padding-top: 12px;
+}
+
 .page--mobile .tiles { grid-template-columns: 1fr; }
 
 .page--mobile .tile__link {
   align-self: stretch;
   justify-content: center;
-  padding-block: 11px;
+  line-height: 1;
+  padding-block: 15px;
 }

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import '../styles/section-heading.css';
 
 export default function SectionHeading({ tag, title, children }: { tag: string; title: string; children?: ReactNode }) {
   return (

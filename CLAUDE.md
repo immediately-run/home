@@ -124,9 +124,9 @@ edge of your viewport where platform chrome may sit, and the chrome is in the
 is covered. All zeros means nothing is over you (`vite dev`, edit mode, or a host
 that does not report it — the field is additive, so it is always safe to read).
 
-**Pad the control, not the layout.** This template ships the wiring: `index.css`
-declares `--chrome-inset-top` / `--chrome-inset-right` (0 by default) and
-`nav.top .cta` pads itself by them in `App.css`. Feed them from the host, once,
+**Pad the control, not the layout.** `index.css` declares
+`--chrome-inset-top` / `--chrome-inset-right` (0 by default); a control that
+anchors in that corner pads itself by them. Feed them from the host, once,
 near your root:
 
 ```ts

@@ -56,6 +56,7 @@ export default function App() {
           title="Notifications"
           linkLabel="Open →"
           to={NOTIFICATIONS}
+          linkToEnd
         />
       </div>
       <Footer />

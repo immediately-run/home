@@ -12,14 +12,16 @@ export interface LinkTileProps {
   linkLabel: string;
   /** The platform path the pill navigates to. */
   to: string;
+  /** Pin the pill to the tile's bottom edge (the /NEWS shape). */
+  linkToEnd?: boolean;
 }
 
 /** One bordered panel tile with its own eyebrow and one hairline link pill.
  *  Rendered twice — the /MODEL and /NEWS pair; a second tile markup is the
  *  copy defect this component exists to prevent. */
-export default function LinkTile({ tag, title, body, linkLabel, to }: LinkTileProps) {
+export default function LinkTile({ tag, title, body, linkLabel, to, linkToEnd = false }: LinkTileProps) {
   return (
-    <section className="tile">
+    <section className={linkToEnd ? 'tile tile--link-end' : 'tile'}>
       <span className="tag">{tag}</span>
       {title !== undefined ? <h3 className="tile__title">{title}</h3> : null}
       {body !== undefined ? <p className="tile__body">{body}</p> : null}
