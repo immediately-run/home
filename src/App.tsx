@@ -10,6 +10,7 @@ import Greeting from './components/Greeting';
 import LinkTile from './components/LinkTile';
 import RecentProjects from './components/RecentProjects';
 import Skeleton from './components/Skeleton';
+import Spaces from './components/Spaces';
 import { recentsState } from './lib/recents';
 import type { RecentRefusal, RecentsState } from './lib/recents';
 import { primary } from './lib/primary';
@@ -90,6 +91,7 @@ export default function App() {
           onCleared={() => setRaw({ projects: null, now: Date.now() })}
         />
       )}
+      <Spaces layout={mobile ? 'strip' : 'list'} />
       <div className="tiles">
         <LinkTile
           tag="/MODEL"
