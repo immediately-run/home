@@ -70,6 +70,12 @@
   padding: 11px 22px;
 }
 
+/* the desktop Edit sits beside the compacted Open (1a draws the pair matched) */
+.rec-edit {
+  font-size: 13px;
+  padding: 10px 17px;
+}
+
 /* the decorative mark — hue arrives as --rec-hue from ProjectMark */
 .rec-mark {
   width: 280px;

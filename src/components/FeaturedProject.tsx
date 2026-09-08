@@ -49,7 +49,7 @@ export default function FeaturedProject({
               </PlatformLink>
             </details>
           ) : (
-            <PlatformLink path={editRoute(project)} className="btn-ghost">
+            <PlatformLink path={editRoute(project)} className="btn-ghost rec-edit">
               Edit
             </PlatformLink>
           )}

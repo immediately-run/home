@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, act } from '@testing-library/react';
+import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { clearRecentProjects } from '@immediately-run/sdk';
 import type { RecentProject } from '@immediately-run/sdk';
@@ -81,6 +82,28 @@ describe('RecentProjects', () => {
     await act(async () => {});
     expect(mockClear).toHaveBeenCalledTimes(1);
     expect(onCleared).toHaveBeenCalledTimes(1);
+  });
+
+  it('the composed clear path: onCleared feeding recentsState(null) removes the section from the DOM', async () => {
+    mockClear.mockResolvedValue();
+    function Page() {
+      const [state, setState] = useState<RecentsState>(() => listState(2));
+      return (
+        <RecentProjects
+          now={NOW}
+          state={state}
+          primary
+          mobile={false}
+          onCleared={() => setState(recentsState(null))}
+        />
+      );
+    }
+    const { container } = render(<Page />);
+    expect(container.querySelector('.rec')).not.toBeNull();
+    fireEvent.click(screen.getByText('Clear recent projects'));
+    fireEvent.click(screen.getByText('Clear'));
+    await act(async () => {});
+    expect(container.querySelector('.rec')).toBeNull();
   });
 
   it('a failed clear leaves the section on screen and does not report cleared', async () => {
