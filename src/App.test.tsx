@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { Component } from 'react';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -11,6 +11,11 @@ vi.mock('@immediately-run/sdk', () => ({
   useFormFactor: vi.fn(),
   listRecentProjects: vi.fn(),
   listAllSpaces: vi.fn(),
+}));
+
+vi.mock('@immediately-run/omnibox', () => ({
+  Omnibox: () => <div data-testid="omnibox" />,
+  focusHeroOmnibox: vi.fn(),
 }));
 
 vi.mock('@immediately-run/sdk/platformLink', () => ({
@@ -58,6 +63,27 @@ describe('App', () => {
     const external = anchors.find((a) => a.getAttribute('href')!.startsWith('https://'));
     expect(external).toBeDefined();
     expect(external!.getAttribute('target')).toBe('_blank');
+  });
+
+  it("open paste box: no app-level gradient primary remains — the Run is the package's own", async () => {
+    const { container } = render(<App />);
+    fireEvent.click(screen.getByText('Paste a repo'));
+    await act(async () => {});
+    expect(screen.getByTestId('omnibox')).toBeDefined();
+    // The omnibox's Run is the page's one gradient primary while open, but it
+    // is the package's `.omnibox-run` (styled by the package's stylesheet, not
+    // the app's `.btn`) — so the app-level gradient class must be gone.
+    expect(container.querySelectorAll('.btn')).toHaveLength(0);
+    const block = container.querySelector('.greeting__paste');
+    expect(block?.contains(screen.getByTestId('omnibox'))).toBe(true);
+  });
+
+  it('open paste box: Make an app is hairline while the omnibox holds the primary', async () => {
+    const { container } = render(<App />);
+    fireEvent.click(screen.getByText('Paste a repo'));
+    await act(async () => {});
+    const makeApp = Array.from(container.querySelectorAll('.greeting__actions a'))[0];
+    expect(makeApp.className).toBe('btn-ghost');
   });
 
   it('the greeting, the two tiles and the footer carry the brief copy', () => {

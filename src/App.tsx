@@ -1,10 +1,11 @@
 import './index.css';
 import './styles/app.css';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 // The record's one read site — exactly one caller per mount, so the grep for
 // the platform call lands on a single line (import alias `readRecents`).
 import { useAuth, useFormFactor, listRecentProjects as readRecents } from '@immediately-run/sdk';
 import type { RecentProject } from '@immediately-run/sdk';
+import { focusHeroOmnibox } from '@immediately-run/omnibox';
 import Footer from './components/Footer';
 import Greeting from './components/Greeting';
 import LinkTile from './components/LinkTile';
@@ -60,6 +61,15 @@ export default function App() {
     }
   }, [status]);
 
+  // The paste box's open state and its focus wiring sit with the other hooks —
+  // hooks never come after the auth early-returns below.
+  const [omniboxOpen, setOmniboxOpen] = useState(false);
+  const pasteToggle = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (omniboxOpen) focusHeroOmnibox();
+  }, [omniboxOpen]);
+
   if (status === 'unknown') {
     return (
       <div className={`page page--${formFactor.class}`}>
@@ -75,13 +85,26 @@ export default function App() {
   // The static half renders while the read is in flight; the featured
   // recent's Open becomes the gradient primary only once a list is on
   // screen, and falls back to the create door when the record is absent.
+  // The paste box is the third owner of that primary: while it is open, its
+  // Run is the primary and every other candidate is hairline.
   const recents: RecentsState | undefined = raw === undefined ? undefined : recentsState(raw.projects);
-  const primaryTarget = primary({ hasRecents: recents?.kind === 'list', omniboxOpen: false });
+  const primaryTarget = primary({
+    hasRecents: recents?.kind === 'list',
+    omniboxOpen,
+  });
   const mobile = formFactor.class === 'mobile';
 
   return (
     <div className={`page page--${formFactor.class}`}>
-      <Greeting primary={primaryTarget} />
+      <Greeting
+        primary={primaryTarget}
+        omniboxOpen={omniboxOpen}
+        onToggle={() => setOmniboxOpen((open) => !open)}
+        toggleRef={pasteToggle}
+        onOmniboxKeyDown={(e) => {
+          if (e.key === 'Escape') pasteToggle.current?.focus();
+        }}
+      />
       {recents !== undefined && raw !== undefined && (
         <RecentProjects
           state={recents}

@@ -40,3 +40,11 @@
   line-height: 1;
   padding-block: 15px;
 }
+
+/* The pasted-repo block beneath the greeting row — layout only; the box's
+   component ships its own stylesheet from the package. */
+.greeting__paste {
+  flex: 1 1 100%;
+  max-width: 640px;
+  margin-top: 4px;
+}
