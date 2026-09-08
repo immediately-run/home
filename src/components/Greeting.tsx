@@ -11,8 +11,9 @@ import '../styles/greeting.css';
 // renders the row and the omnibox block from props. The omnibox is the front
 // door's component, mounted once, launch grammar only — no `hits` prop, so
 // the panel shows the location row and nothing else. Escape inside the block
-// closes the panel (the package's own handler) and returns focus to the
-// Paste a repo link (App's wrapper handler — one listener, not two).
+// closes the block and returns focus to the Paste a repo link: the package's
+// own handler clears and blurs its panel, and App's wrapper handler (one
+// listener, not two doing the same job) closes and refocuses.
 
 export default function Greeting({
   primary,

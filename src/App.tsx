@@ -102,7 +102,12 @@ export default function App() {
         onToggle={() => setOmniboxOpen((open) => !open)}
         toggleRef={pasteToggle}
         onOmniboxKeyDown={(e) => {
-          if (e.key === 'Escape') pasteToggle.current?.focus();
+          // The package's Escape clears and blurs its panel; closing the
+          // block and handing focus back to the toggle is Home's half.
+          if (e.key === 'Escape') {
+            setOmniboxOpen(false);
+            pasteToggle.current?.focus();
+          }
         }}
       />
       {recents !== undefined && raw !== undefined && (

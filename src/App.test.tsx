@@ -86,6 +86,32 @@ describe('App', () => {
     expect(makeApp.className).toBe('btn-ghost');
   });
 
+  it('open paste box with recents on screen: the featured Open goes hairline while the box holds the primary', async () => {
+    mockList.mockResolvedValue([
+      { provider: 'github', namespace: 'acme', repository: 'todo', ref: 'feat/x', ts: 0 },
+      { provider: 'github', namespace: 'immediately-run', repository: 'grove', ref: 'main', ts: 0 },
+    ]);
+    const { container } = render(<App />);
+    await screen.findByText('acme/todo');
+    const featuredOpen = container.querySelector('.rec-featured__actions a');
+    expect(featuredOpen?.className).toBe('btn rec-open');
+    fireEvent.click(screen.getByText('Paste a repo'));
+    await act(async () => {});
+    expect(featuredOpen?.className).toBe('btn-ghost rec-open');
+    expect(container.querySelectorAll('.greeting__actions .btn')).toHaveLength(0);
+  });
+
+  it('Escape closes the block and the primary moves back off the omnibox', async () => {
+    const { container } = render(<App />);
+    fireEvent.click(screen.getByText('Paste a repo'));
+    await act(async () => {});
+    expect(screen.getByTestId('omnibox')).toBeDefined();
+    fireEvent.keyDown(screen.getByTestId('omnibox'), { key: 'Escape' });
+    await act(async () => {});
+    expect(screen.queryByTestId('omnibox')).toBeNull();
+    expect(container.querySelector('.greeting__paste')).toBeNull();
+  });
+
   it('the greeting, the two tiles and the footer carry the brief copy', () => {
     render(<App />);
     expect(screen.getByText('Welcome back.')).toBeDefined();
