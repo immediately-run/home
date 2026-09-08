@@ -1,0 +1,42 @@
+/* The greeting row — "Welcome back." with the two action pills on its right;
+   on a phone the pills sit beneath the greeting, full width. */
+.greeting {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.greeting__title {
+  font: 800 42px/1 var(--disp);
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+
+.greeting__actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+.greeting__actions .btn,
+.greeting__actions .btn-ghost {
+  font-size: 13px;
+  padding: 9px 15px;
+}
+
+.page--mobile .greeting__title { font-size: 30px; }
+
+.page--mobile .greeting__actions {
+  margin-left: 0;
+  margin-top: 12px;
+  width: 100%;
+}
+
+.page--mobile .greeting__actions .btn,
+.page--mobile .greeting__actions .btn-ghost {
+  flex: 1;
+  justify-content: center;
+  line-height: 1;
+  padding-block: 15px;
+}

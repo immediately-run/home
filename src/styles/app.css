@@ -1,0 +1,10 @@
+/* Page shell — the region's content column inside the mode's frame.
+   The wide layout is the default; `.page--mobile` (from the host's
+   form-factor channel, not the viewport) is the phone projection. */
+.page {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 30px 36px 24px;
+}
+
+.page--mobile { padding: 18px 16px 14px; }

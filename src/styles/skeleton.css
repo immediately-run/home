@@ -1,0 +1,66 @@
+/* The auth-resolving skeleton — the greeting row and four row placeholders,
+   pulsing; never a sign-in flash (the wait itself is the host's obligation). */
+.skel__greet {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.skel__title {
+  width: 300px;
+  height: 34px;
+  border-radius: 8px;
+  background: var(--panel-2);
+  animation: skel-pulse 1.6s ease-in-out infinite;
+}
+
+.skel__actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+.skel__pill { height: 34px; border-radius: var(--r-pill); background: var(--panel); border: 1px solid var(--line); }
+.skel__pill--a { width: 104px; }
+.skel__pill--b { width: 118px; }
+
+.skel__rows {
+  margin-top: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skel__eyebrow { height: 12px; width: 88px; border-radius: 6px; background: var(--panel-2); }
+
+.skel__feat {
+  height: 96px;
+  border-radius: var(--r-lg);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  animation: skel-pulse 1.6s ease-in-out .2s infinite;
+}
+
+.skel__row {
+  height: 44px;
+  border-radius: var(--r-md);
+  background: var(--panel);
+  border: 1px solid var(--line);
+}
+
+@keyframes skel-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .55; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skel__title,
+  .skel__feat { animation: none; }
+}
+
+.page--mobile .skel__title { width: 60vw; }
+
+.page--mobile .skel__rows {
+  margin-top: 20px;
+  gap: 8px;
+}

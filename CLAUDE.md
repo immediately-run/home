@@ -32,8 +32,8 @@ local `vite dev` — the most common silent failure.
    `SecurityError` — so wrap every access in `try`/`catch` (a
    `typeof localStorage === 'undefined'` guard does NOT work, because the throw
    is on access, not on the value) and never touch it at module scope. Treat
-   persistence as optional and keep the app fully usable without it. Worked
-   example: `src/hooks/useTheme.ts`.
+   persistence as optional and keep the app fully usable without it. This app
+   keeps no local persistence at all — everything it shows is a platform record.
    **Downloading a blob works; *navigating* to one does not.** A clicked
    `<a download href="blob:...">` saves the file — the frame carries
    `allow-downloads` in every stance, and the opaque origin does not stop it.
@@ -124,9 +124,9 @@ edge of your viewport where platform chrome may sit, and the chrome is in the
 is covered. All zeros means nothing is over you (`vite dev`, edit mode, or a host
 that does not report it — the field is additive, so it is always safe to read).
 
-**Pad the control, not the layout.** This template ships the wiring: `index.css`
-declares `--chrome-inset-top` / `--chrome-inset-right` (0 by default) and
-`nav.top .cta` pads itself by them in `App.css`. Feed them from the host, once,
+**Pad the control, not the layout.** `index.css` declares
+`--chrome-inset-top` / `--chrome-inset-right` (0 by default); a control that
+anchors in that corner pads itself by them. Feed them from the host, once,
 near your root:
 
 ```ts
@@ -244,16 +244,17 @@ npm run lint    # must pass — this is the cheapest proof the Fast Refresh rule
 
 Then eyeball the page (`npm run dev`) and click any interactive controls.
 
-## Persistence: start from `src/lib/store.ts`
+## Persistence: not needed here (kept for forks)
 
-Every app that keeps data re-derived the same storage pattern; it ships in the
-template now so it is copied, not rediscovered: **private settings first**
-(`openSettings()` — per-user, per-app, no prompt), **a remembered data space**
-(create once with consent, then re-open by id from settings — only the create
-path prompts), **one JSON record per file** (the platform fs is
-last-write-wins per file; records keep writes from contending and reads
-whole). `openAppStore()` handles the whole flow, degrades to an in-memory
-session when signed out or declined, and `watchRecords` uses `fs.watch`
+Home keeps no app-local data — every surface it renders is a platform record
+(recents, spaces) read through the SDK. A fork that wants its own data should
+start from the storage starter in `new-project-template` (`src/lib/store.ts`):
+**private settings first** (`openSettings()` — per-user, per-app, no prompt), **a
+remembered data space** (create once with consent, then re-open by id from
+settings — only the create path prompts), **one JSON record per file** (the
+platform fs is last-write-wins per file; records keep writes from contending and
+reads whole). `openAppStore()` handles the whole flow, degrades to an in-memory
+session when signed out or declined, and `watchRecords` uses `fs.watch
 (remote changes ARE delivered as watch events) with a poll fallback on older
 hosts. Seeding is idempotent and the `seeded` marker is written last — see the
 StrictMode truth below.
