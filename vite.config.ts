@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import mdx from '@mdx-js/rollup'
 import { devFs } from '@immediately-run/dev-fs'
@@ -17,4 +17,10 @@ export default defineConfig({
     { enforce: 'pre', ...mdx() },
     react(),
   ],
+  test: {
+    // The SDK dist ships extensionless relative ESM imports, which Vite's
+    // resolver accepts but Node's — used for externalized deps in vitest —
+    // rejects. Inlining routes it through Vite's resolver in tests only.
+    server: { deps: { inline: ['@immediately-run/sdk'] } },
+  },
 })

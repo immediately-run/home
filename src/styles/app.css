@@ -1,0 +1,48 @@
+/* Page shell — the region's content column inside the mode's frame.
+   The wide layout is the default; `.page--mobile` (from the host's
+   form-factor channel, not the viewport) is the phone projection. */
+.page {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 30px 36px 24px;
+}
+
+/* A section heading row: mono eyebrow baseline-aligned left of an <h2>
+   (which ends on a period), optional right-aligned link group. */
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin: 26px 0 12px;
+}
+
+.section-head h2 {
+  font: 800 22px/1 var(--disp);
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.section-head__links {
+  margin-left: auto;
+  display: flex;
+  gap: 14px;
+  font: 400 11.5px var(--mono);
+  color: var(--ink-2);
+}
+
+.section-head__links a { color: inherit; text-decoration: none; }
+.section-head__links a:hover { color: var(--ink); }
+
+.page--mobile { padding: 18px 16px 14px; }
+
+.page--mobile .section-head {
+  gap: 10px;
+  margin: 20px 0 10px;
+}
+
+.page--mobile .section-head h2 { font-size: 17px; }
+
+.page--mobile .section-head__links {
+  gap: 10px;
+  font-size: 10.5px;
+}
