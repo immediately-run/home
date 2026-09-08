@@ -3,13 +3,14 @@ import { act, cleanup, render, screen } from '@testing-library/react';
 import { Component } from 'react';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { useAuth, useFormFactor, listRecentProjects } from '@immediately-run/sdk';
+import { useAuth, useFormFactor, listRecentProjects, listAllSpaces } from '@immediately-run/sdk';
 import App from './App';
 
 vi.mock('@immediately-run/sdk', () => ({
   useAuth: vi.fn(),
   useFormFactor: vi.fn(),
   listRecentProjects: vi.fn(),
+  listAllSpaces: vi.fn(),
 }));
 
 vi.mock('@immediately-run/sdk/platformLink', () => ({
@@ -23,13 +24,15 @@ vi.mock('@immediately-run/sdk/platformLink', () => ({
 const mockAuth = vi.mocked(useAuth);
 const mockFormFactor = vi.mocked(useFormFactor);
 const mockList = vi.mocked(listRecentProjects);
+const mockSpaces = vi.mocked(listAllSpaces);
 
 beforeEach(() => {
   mockAuth.mockReturnValue({ status: 'signed-in', user: null });
   mockFormFactor.mockReturnValue({ class: 'desktop', width: 1280, height: 900, orientation: 'landscape' });
-  // The static-half tests render while the read is in flight: a promise that
-  // never settles keeps the page on the pre-read projection, synchronously.
+  // The static-half tests render while the reads are in flight: promises that
+  // never settle keep the page on the pre-read projection, synchronously.
   mockList.mockReturnValue(new Promise(() => {}));
+  mockSpaces.mockReturnValue(new Promise(() => {}));
 });
 
 afterEach(cleanup);

@@ -33,16 +33,16 @@ describe('routes', () => {
     expect(editRoute({ ...project, ref: 'feat/x' })).toBe('/edit/github/acme/todo/feat/x/files/src/App.tsx');
   });
 
-  it("every route helper's first segment is one of the seven modes", () => {
-    for (const path of [presentRoute(project), editRoute(project), spacesRoute(), spacesRoute('space-1'), SETTINGS_LANGUAGE_MODEL, NOTIFICATIONS]) {
-      const first = path.split('/')[1];
-      expect(MODE_SEGMENTS).toContain(first);
-    }
+  it("spacesRoute deep-links at one space when given an id (?space= — the manager's selection parameter)", () => {
+    expect(spacesRoute()).toBe('/spaces');
+    expect(spacesRoute('space-1')).toBe('/spaces?space=space-1');
   });
 
-  it('spacesRoute deep-links at one space when given an id', () => {
-    expect(spacesRoute()).toBe('/spaces');
-    expect(spacesRoute('space-1')).toBe('/spaces/space-1');
+  it("every route helper's first segment is one of the seven modes", () => {
+    for (const path of [presentRoute(project), editRoute(project), spacesRoute(), spacesRoute('space-1'), SETTINGS_LANGUAGE_MODEL, NOTIFICATIONS]) {
+      const first = path.split('?')[0].split('/')[1];
+      expect(MODE_SEGMENTS).toContain(first);
+    }
   });
 
   it('the tile and create constants spell their modes (the create door is a front-door alias)', () => {
