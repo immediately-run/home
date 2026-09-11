@@ -106,7 +106,21 @@ describe('RecentProjects', () => {
     expect(container.querySelector('.rec')).toBeNull();
   });
 
-  it('a failed clear leaves the section on screen and does not report cleared', async () => {
+  it('while the clear is in flight the control names the wait and the rows dim', async () => {
+    let settle!: () => void;
+    mockClear.mockImplementation(() => new Promise<void>((resolve) => { settle = resolve; }));
+    const { container } = render(<RecentProjects now={NOW} state={listState(2)} primary mobile={false} onCleared={() => {}} />);
+    fireEvent.click(screen.getByText('Clear recent projects'));
+    fireEvent.click(screen.getByText('Clear'));
+    const busy = screen.getByText('Clearing…') as HTMLButtonElement;
+    expect(busy.disabled).toBe(true);
+    expect(busy.getAttribute('aria-busy')).toBe('true');
+    expect(container.querySelector('.rec-row--clearing')).not.toBeNull();
+    await act(async () => { settle(); });
+    expect(container.querySelector('.rec-row--clearing')).toBeNull();
+  });
+
+  it('a failed clear keeps the rows, names the typed reason in the status region, and does not report cleared', async () => {
     mockClear.mockRejectedValue({ code: 'invalid-params' });
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const onCleared = vi.fn();
@@ -117,6 +131,9 @@ describe('RecentProjects', () => {
     expect(container.querySelectorAll('.rec-row')).toHaveLength(1);
     expect(onCleared).not.toHaveBeenCalled();
     expect(errSpy).toHaveBeenCalled();
+    expect(screen.getByRole('status').textContent).toBe(
+      'Could not clear your recent projects (invalid-params). Nothing was removed.',
+    );
     errSpy.mockRestore();
   });
 

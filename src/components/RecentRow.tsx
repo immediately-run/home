@@ -11,13 +11,15 @@ export default function RecentRow({
   project,
   now,
   mobile,
+  dimmed = false,
 }: {
   project: RecentProject;
   now: number;
   mobile: boolean;
+  dimmed?: boolean;
 }) {
   return (
-    <div className="rec-row">
+    <div className={dimmed ? 'rec-row rec-row--clearing' : 'rec-row'}>
       <span className="rec-row__name">
         {project.namespace}/{project.repository}
       </span>
