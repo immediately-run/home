@@ -161,7 +161,21 @@
   border-color: var(--line);
 }
 
+/* the pending clear: the rows stay and dim, so the change is visible in
+   the collection, not only on the button (R-IX-3) */
+.rec-row--clearing {
+  opacity: 0.45;
+}
+
 /* ---- clear ----------------------------------------------------------- */
+
+/* the typed failure sentence — visible, announced (the app's one live
+   region), and worded like the off notes: what is true, then the reason */
+.rec-clear__error {
+  margin-top: 9px;
+  font: 400 13px/1.5 var(--sans);
+  color: var(--ink-2);
+}
 
 .rec-clear__line {
   margin-top: 9px;

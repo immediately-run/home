@@ -26,18 +26,27 @@ export default function RecentProjects({
   onCleared: () => void;
 }) {
   const [confirming, setConfirming] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  const [clearFailure, setClearFailure] = useState<string | null>(null);
 
   if (state.kind === 'absent') return null;
 
   const clear = async () => {
+    setClearing(true);
+    setClearFailure(null);
     try {
       await clearRecentProjects();
       onCleared();
     } catch (err) {
       // The record is host-owned; the truthful surface after a failed clear
-      // is the one that is still there. Log loudly, stay on the list.
+      // is the one that is still there. Log loudly, stay on the list, and
+      // name the typed reason for the user — the code, never the message.
       console.error('home: clearing recent projects failed', err);
+      const code = typeof err === 'object' && err !== null && 'code' in err ? String(err.code) : 'unknown';
+      setClearFailure(code);
       setConfirming(false);
+    } finally {
+      setClearing(false);
     }
   };
 
@@ -57,17 +66,28 @@ export default function RecentProjects({
       {state.rest.length > 0 && (
         <div className="rec-rows">
           {state.rest.map((project) => (
-            <RecentRow key={`${project.namespace}/${project.repository}/${project.ref}`} project={project} now={now} mobile={mobile} />
+            <RecentRow
+              key={`${project.namespace}/${project.repository}/${project.ref}`}
+              project={project}
+              now={now}
+              mobile={mobile}
+              dimmed={clearing}
+            />
           ))}
         </div>
+      )}
+      {clearFailure !== null && (
+        <p className="rec-clear__error" role="status">
+          Could not clear your recent projects ({clearFailure}). Nothing was removed.
+        </p>
       )}
       {confirming ? (
         <p className="rec-clear">
           Clear recent projects?{' '}
-          <button type="button" className="rec-clear__btn" onClick={clear}>
-            Clear
+          <button type="button" className="rec-clear__btn" onClick={clear} disabled={clearing} aria-busy={clearing}>
+            {clearing ? 'Clearing…' : 'Clear'}
           </button>{' '}
-          <button type="button" className="rec-clear__btn" onClick={() => setConfirming(false)}>
+          <button type="button" className="rec-clear__btn" onClick={() => setConfirming(false)} disabled={clearing}>
             Keep
           </button>
         </p>
