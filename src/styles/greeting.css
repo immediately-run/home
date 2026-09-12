@@ -17,6 +17,12 @@
   margin-left: auto;
   display: flex;
   gap: 8px;
+  /* The corner controls consume the host-chrome insets (index.css): the
+     platform pill floats over the top-right corner, so the actions pad
+     themselves clear of it — pad the control, not the layout. 0 off-host;
+     nothing changes until the host feeds the vars (CLAUDE.md). */
+  padding-top: var(--chrome-inset-top);
+  padding-right: var(--chrome-inset-right);
 }
 
 .greeting__actions .btn,
@@ -31,6 +37,10 @@
   margin-left: 0;
   margin-top: 12px;
   width: 100%;
+  /* On the phone the actions leave the corner (full width beneath the
+     greeting), so they pay no inset. */
+  padding-top: 0;
+  padding-right: 0;
 }
 
 .page--mobile .greeting__actions .btn,
@@ -39,4 +49,12 @@
   justify-content: center;
   line-height: 1;
   padding-block: 15px;
+}
+
+/* The pasted-repo block beneath the greeting row — layout only; the box's
+   component ships its own stylesheet from the package. */
+.greeting__paste {
+  flex: 1 1 100%;
+  max-width: 640px;
+  margin-top: 4px;
 }

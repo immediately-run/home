@@ -64,10 +64,12 @@
      On immediately.run the platform pill floats over your app's TOP-RIGHT
      corner, so anything you anchor there (a theme toggle, a menu button) can
      end up underneath it. The host reports the covered box; feed it in from
-     `useFormFactor().insets` and the rules that consume these vars below do the
+     `useFormFactor().insets` and the rules that consume these vars do the
      rest. See CLAUDE.md → "Keep your corner controls clear of the platform
-     pill". Zero by default: off-host, and on any host that reports nothing,
-     your layout is untouched. */
+     pill". Consumed by the greeting row's actions — this app's one corner-
+     pinned control group — via `padding-top/right` in src/styles/greeting.css
+     (pad the control, not the layout). Zero by default: off-host, and on any
+     host that reports nothing, your layout is untouched. */
   --chrome-inset-top: 0px;
   --chrome-inset-right: 0px;
 }

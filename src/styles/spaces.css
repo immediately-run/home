@@ -1,0 +1,159 @@
+/* The /SPACES section — one bordered list on desktop, a horizontal card strip
+   on the phone. Tokens from index.css; the layout switch is prop-driven
+   (structure) with the phone styles keyed off the strip classes. */
+
+/* the 1d empty state — the sentence and the Create pill in one dashed box */
+.sp-empty-box {
+  border: 1px dashed var(--line-2);
+  border-radius: var(--r-md);
+  background: var(--panel);
+  padding: 22px 24px;
+}
+
+.sp-empty {
+  font: 400 15px/1.5 var(--sans);
+  color: var(--ink-2);
+  max-width: 48ch;
+}
+
+.sp-empty__create {
+  display: inline-block;
+  margin-top: 16px;
+  font: 600 12.5px/1 var(--sans);
+  color: var(--ink);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-pill);
+  padding: 9px 16px;
+  transition: border-color 0.14s;
+}
+
+.sp-empty__create:hover {
+  border-color: var(--accent-2);
+}
+
+/* the 1d refused state — one line, the pill on its right */
+.sp-off {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 14px;
+  font: 400 13.5px/1.5 var(--sans);
+  color: var(--ink-2);
+}
+
+.sp-off__all {
+  margin-left: auto;
+  font: 600 12px/1 var(--sans);
+  color: var(--ink);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-pill);
+  padding: 8px 14px;
+  white-space: nowrap;
+  transition: border-color 0.14s;
+}
+
+.sp-off__all:hover {
+  border-color: var(--accent-2);
+}
+
+/* ---- the compact list (desktop) ------------------------------------- */
+
+.sp-list {
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--panel);
+  overflow: hidden;
+}
+
+.sp-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+}
+
+.sp-row + .sp-row {
+  border-top: 1px solid var(--line);
+}
+
+.sp-name {
+  font: 600 14px/1 var(--sans);
+  color: var(--ink);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sp-role {
+  font: 400 10.5px/1 var(--mono);
+  color: var(--ink-3);
+}
+
+.sp-manage {
+  margin-left: auto;
+  font: 600 12px/1 var(--sans);
+  color: var(--ink);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-pill);
+  padding: 7px 14px;
+  white-space: nowrap;
+  transition: border-color 0.14s;
+}
+
+.sp-manage:hover {
+  border-color: var(--accent-2);
+}
+
+/* ---- the phone strip: the one place a space renders as a card -------- */
+
+.sp-strip {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scroll-padding-left: 2px;
+  padding-bottom: 2px;
+}
+
+.sp-card {
+  flex: 0 0 150px;
+  scroll-snap-align: start;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  padding: 13px 14px;
+  min-height: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.sp-card .sp-name {
+  font: 800 16px/1 var(--disp);
+  letter-spacing: -0.02em;
+  white-space: normal;
+}
+
+.sp-card .sp-role {
+  margin-top: 6px;
+}
+
+.sp-card .sp-manage {
+  margin-left: 0;
+  margin-top: 12px;
+  border: 0;
+  /* the quiet look, but restored to the 24px target floor (WCAG 2.5.8):
+     min-height + centered content instead of bare 11.5px text */
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 11.5px;
+  color: var(--ink-2);
+}
+
+.sp-card .sp-manage:hover {
+  color: var(--ink);
+}

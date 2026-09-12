@@ -1,4 +1,5 @@
 import { PlatformLink } from '@immediately-run/sdk/platformLink';
+import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 import type { RecentProject } from '@immediately-run/sdk';
 import ProjectMark from './ProjectMark';
 import { relativeOpened } from '../lib/recents';
@@ -8,6 +9,15 @@ import { editRoute, presentRoute } from '../lib/routes';
 // primary when `primary` (the page decides, never a class name); on the phone
 // the decorative panel and the inline Edit go, Edit moving behind the ⋯ menu
 // rather than rendering hidden (a hidden button is still a tab stop).
+
+// Escape collapses the ⋯ menu and leaves focus on its toggle — the same
+// close-and-refocus contract the paste block follows. The <details> is
+// otherwise native: uncontrolled, so closing is a plain DOM write.
+function closeMenuOnEscape(e: ReactKeyboardEvent<HTMLDetailsElement>) {
+  if (e.key !== 'Escape' || !e.currentTarget.open) return;
+  e.currentTarget.open = false;
+  e.currentTarget.querySelector<HTMLElement>('.rec-menu__toggle')?.focus();
+}
 
 export default function FeaturedProject({
   project,
@@ -40,7 +50,7 @@ export default function FeaturedProject({
             Open
           </PlatformLink>
           {mobile ? (
-            <details className="rec-menu">
+            <details className="rec-menu" onKeyDown={closeMenuOnEscape}>
               <summary className="rec-menu__toggle" aria-label="More actions">
                 ⋯
               </summary>
@@ -49,7 +59,7 @@ export default function FeaturedProject({
               </PlatformLink>
             </details>
           ) : (
-            <PlatformLink path={editRoute(project)} className="btn-ghost">
+            <PlatformLink path={editRoute(project)} className="btn-ghost rec-edit">
               Edit
             </PlatformLink>
           )}

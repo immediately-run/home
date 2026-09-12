@@ -19,9 +19,10 @@ export function editRoute(project: RecentProject): string {
   return `/edit/${project.provider}/${project.namespace}/${project.repository}/${project.ref}/files/${ENTRY}`;
 }
 
-/** The spaces mode, optionally deep-linked at one space. */
+/** The spaces mode, optionally deep-linked at one space (`?space=<id>` — the
+ *  manager's selection parameter; selection itself is owner-gated there). */
 export function spacesRoute(spaceId?: string): string {
-  return spaceId ? `/spaces/${spaceId}` : '/spaces';
+  return spaceId ? `/spaces?space=${spaceId}` : '/spaces';
 }
 
 /** The settings mode at the language-model section. */
