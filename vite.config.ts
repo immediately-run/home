@@ -18,13 +18,10 @@ export default defineConfig({
     react(),
   ],
   test: {
-    // The SDK dist ships extensionless relative ESM imports, which Vite's
-    // resolver accepts but Node's — used for externalized deps in vitest —
-    // rejects. Inlining routes it through Vite's resolver in tests only.
-    // omnibox rides the same list (R3-885, as landing-page has it): it is a
-    // `github:` dependency whose `dist/` exists only where its `prepare` ran,
-    // so an externalized import would resolve to a file `npm ci
-    // --ignore-scripts` never builds.
+    // The @immediately-run/* dists ship extensionless relative ESM imports
+    // (`./sandboxUtils`), which Vite's resolver accepts but Node's — used for
+    // externalized deps in vitest — rejects. Inlining routes them through Vite's
+    // resolver instead, in tests only; `vite build` was never affected.
     server: { deps: { inline: ['@immediately-run/sdk', '@immediately-run/omnibox'] } },
   },
 })
