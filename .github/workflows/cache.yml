@@ -195,14 +195,75 @@ jobs:
       # leaves every sha-pinned mount on the anonymous-REST fallback (found on
       # R3-624: file-selector's pinned sha 404s while its main.zip is 200).
       #
-      # BOUND, by design: each deploy REPLACES the Pages site, so a sha zip serves
-      # only while its commit is the branch head — a consumer's pinned sha is evicted
-      # by the library's next push and its mount falls back to REST (correct, slower)
-      # until the consumer re-pins. A pin bump is a refresh; keeping stale shas
-      # resident across deploys is a possible follow-up, deliberately not built here.
+      # BOUND, by design until R3-897: each deploy REPLACES the Pages site, so a sha
+      # zip served only while its commit was the branch head — a consumer's pinned
+      # sha was evicted by the library's next push and its mount fell back to REST
+      # (correct, slower) until the consumer re-pinned. R3-897 keeps every
+      # consumer-pinned sha resident across redeploys: the keep-set step below
+      # re-builds them each run, derived from the consumers' package.json pins.
+      - name: Derive the consumer-pinned refs to keep (R3-897)
+        id: kept
+        env:
+          GH_TOKEN: ${{ github.token }}
+          KEPT_OWNER: ${{ github.repository_owner }}
+          KEPT_REPO: ${{ github.event.repository.name }}
+        run: |
+          # KEPT-ZIP-REFS-BEGIN (R3-897) — the block scripts/check-kept-zip-refs.mjs
+          # extracts and drives; edit here, never only in the test.
+          node <<'KEPT_ZIP_REFS' >> "$GITHUB_OUTPUT"
+          const { execFileSync } = require('node:child_process');
+          const owner = process.env.KEPT_OWNER;
+          const repo = process.env.KEPT_REPO;
+          const gh = (...a) => execFileSync('gh', ['api', ...a], { encoding: 'utf8', maxBuffer: 1 << 24 });
+          // Paginated, like the drift check's own listing: past 100 org repos a
+          // single page would silently truncate the keep-set. `--paginate` prints
+          // one JSON array per page, so project to names and split — the same
+          // shape the drift check uses for the same listing.
+          const names = gh(`/orgs/${owner}/repos?per_page=100`, '--paginate', '--jq', '.[].name')
+            .split('\n').map((l) => l.trim()).filter(Boolean);
+          const kept = new Set();
+          const pinPrefix = `github:${owner}/${repo}#`;
+          for (const name of names) {
+            if (name === repo) continue; // this repo's own head is built separately
+            let pkg;
+            try {
+              pkg = gh(`/repos/${owner}/${name}/contents/package.json`, '-H', 'Accept: application/vnd.github.raw');
+            } catch (e) {
+              const msg = String(e && e.stderr || e);
+              // Benign only: no package.json (404), or a repo this token cannot read
+              // (403 — e.g. a private consumer). EVERYTHING ELSE — a rate limit, a
+              // 5xx, a DNS failure — RETHROWS and fails the run, fail-closed: the
+              // previous Pages site (its zips included) stays, and a dropped pin is
+              // never silent (the exact eviction this keep-set exists to stop).
+              if (/HTTP 40[34]/.test(msg)) continue;
+              throw e;
+            }
+            // Walk the parsed dependency values, never a regex over raw text: any
+            // pin shape npm accepts stays keepable (devDependencies and optional
+            // peers included).
+            for (const group of ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']) {
+              const deps = JSON.parse(pkg)[group];
+              if (!deps) continue;
+              for (const spec of Object.values(deps)) {
+                if (typeof spec === 'string' && spec.startsWith(pinPrefix) && /^[0-9a-f]{40}$/.test(spec.slice(pinPrefix.length))) {
+                  kept.add(spec.slice(pinPrefix.length));
+                }
+              }
+            }
+          }
+          console.log('refs=' + [...kept].join(' '));
+          KEPT_ZIP_REFS
+          # KEPT-ZIP-REFS-END
+        # The private/repo-scoped GITHUB_TOKEN cannot read other PRIVATE repos'
+        # package.json — the two known consumers (landing-page, home) are public, and
+        # a private consumer's pin is kept the first run after it makes its pin
+        # readable to this token (or re-pins after a redeploy). Public pins cover the
+        # case that shipped: a first-party library every front-door load mounts.
+
       - name: Build cache zip
         run: |
-          for ref in "${{ github.ref_name }}" "${{ github.sha }}"; do
+          for ref in "${{ github.ref_name }}" "${{ github.sha }}" ${{ steps.kept.outputs.refs }}; do
+            [ -n "$ref" ] || continue
             npx -y @immediately-run/cli@0.9.1 cache-zip \
               --owner "${{ github.repository_owner }}" \
               --repo "${{ github.event.repository.name }}" \
