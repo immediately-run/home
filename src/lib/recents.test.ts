@@ -26,8 +26,13 @@ describe('recentsState', () => {
     expect(recentsState({ code: 'forbidden' })).toEqual({ kind: 'off' });
   });
 
-  it('any other refusal code rethrows — a swallowed failure reads as "off" and hides the bug', () => {
-    expect(() => recentsState({ code: 'invalid-params' })).toThrow('invalid-params');
+  it('a declined consent is off — the user answered Not now', () => {
+    expect(recentsState({ code: 'cancelled' })).toEqual({ kind: 'off' });
+  });
+
+  it('any other refusal code is failed with its code — never off, and never a throw that takes the page (R3-898)', () => {
+    expect(recentsState({ code: 'invalid-params' })).toEqual({ kind: 'failed', code: 'invalid-params' });
+    expect(recentsState({ code: 'timeout' })).toEqual({ kind: 'failed', code: 'timeout' });
   });
 
   it('a list splits featured (newest first) from rest', () => {

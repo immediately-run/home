@@ -14,21 +14,24 @@ export interface RecentRefusal {
 export type RecentsState =
   | { kind: 'absent' }
   | { kind: 'off' }
+  | { kind: 'failed'; code: string }
   | { kind: 'list'; featured: RecentProject; rest: RecentProject[] };
 
 /**
  * The one decision of which recents surface renders. `null` (cleared or
  * never-used) is ABSENT — never an empty list, never an empty-state note
- * (R-OSO-22). A refusal with code `forbidden` (a fork that has not been
- * consented, or an app that is not the page.home binding) is `off`. Anything
- * else rethrows: a swallowed failure would read as "off" and hide the real
- * bug.
+ * (R-OSO-22). A refusal the user or the host meant is `off`: `forbidden` (a
+ * fork that has not been consented, or an app that is not the page.home
+ * binding) and `cancelled` (the user answered the consent with Not now).
+ * Anything else is FAILED, with its code: shown in the section and logged by
+ * it, never read as "off" (which would hide the bug) and never thrown, since a
+ * throw takes the whole page down for one optional section (R3-898).
  */
 export function recentsState(result: RecentProject[] | null | RecentRefusal): RecentsState {
   if (result === null) return { kind: 'absent' };
   if ('code' in result) {
-    if (result.code === 'forbidden') return { kind: 'off' };
-    throw new Error(`recent projects read failed: ${result.code}`);
+    if (result.code === 'forbidden' || result.code === 'cancelled') return { kind: 'off' };
+    return { kind: 'failed', code: result.code };
   }
   if (result.length === 0) return { kind: 'absent' };
   return { kind: 'list', featured: result[0], rest: result.slice(1) };

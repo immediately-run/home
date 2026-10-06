@@ -30,8 +30,9 @@ export default function App() {
   // The one read of the host-owned record, on mount — no polling, no
   // re-read on focus. The raw result (list, null, or the refusal's code)
   // goes into state and every decision about it runs through the pure
-  // module during render, so a failure that is not `forbidden` reaches the
-  // error boundary instead of masquerading as "recents are off".
+  // module during render, so a failure that is not a refusal the user or the
+  // host meant shows as a failed recents section, with its code, instead of
+  // masquerading as "recents are off" or taking the page down (R3-898).
   const [raw, setRaw] = useState<RawRecents>();
 
   useEffect(() => {

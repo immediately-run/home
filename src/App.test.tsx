@@ -1,7 +1,5 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { Component } from 'react';
-import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAuth, useFormFactor, listRecentProjects, listAllSpaces } from '@immediately-run/sdk';
 import App from './App';
@@ -159,36 +157,24 @@ describe('App', () => {
     expect(container.querySelector('.rec')).toBeNull();
   });
 
-  it('a forbidden refusal renders the off line; any other code reaches the error boundary', async () => {
-    mockList.mockRejectedValue({ code: 'forbidden' });
-    const first = render(<App />);
-    await screen.findByText('Recents are off for this version of Home.');
-    expect(screen.getByText('Recent projects.')).toBeDefined();
-    first.unmount();
+  it('a forbidden or declined refusal renders the off line', async () => {
+    for (const code of ['forbidden', 'cancelled']) {
+      mockList.mockRejectedValue({ code });
+      const view = render(<App />);
+      await screen.findByText('Recents are off for this version of Home.');
+      expect(screen.getByText('Recent projects.')).toBeDefined();
+      view.unmount();
+    }
+  });
 
-    mockList.mockRejectedValue({ code: 'invalid-params' });
+  it('any other refusal fails the recents section only: the page stays, the code is shown and logged (R3-898)', async () => {
+    mockList.mockRejectedValue({ code: 'timeout' });
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const { container } = render(
-      <Boundary>
-        <App />
-      </Boundary>,
-    );
-    await act(async () => {});
-    expect(container.textContent).toContain('boundary-caught');
-    expect(container.querySelector('.rec-off')).toBeNull();
+    const { container } = render(<App />);
+    await screen.findByText('Your recent projects could not be loaded (timeout).');
+    expect(container.querySelector('.btn')?.textContent).toBe('Make an app →');
+    expect(screen.getByText('Recent projects.')).toBeDefined();
+    expect(errSpy).toHaveBeenCalledWith('home: recent projects read failed: timeout');
     errSpy.mockRestore();
   });
 });
-
-// Test-only boundary: proves a non-forbidden refusal THROWS out of render
-// (reaching whichever boundary the host frame mounts) instead of rendering
-// the "off" line, which would be a false claim about a fork's consent.
-class Boundary extends Component<{ children: ReactNode }, { failed: boolean }> {
-  state = { failed: false };
-  static getDerivedStateFromError() {
-    return { failed: true };
-  }
-  render() {
-    return this.state.failed ? <span>boundary-caught</span> : this.props.children;
-  }
-}
