@@ -12,7 +12,7 @@ import LinkTile from './components/LinkTile';
 import RecentProjects from './components/RecentProjects';
 import Skeleton from './components/Skeleton';
 import Spaces from './components/Spaces';
-import { recentsState } from './lib/recents';
+import { asRefusal, recentsState } from './lib/recents';
 import type { RecentRefusal, RecentsState } from './lib/recents';
 import { primary } from './lib/primary';
 import { NOTIFICATIONS, SETTINGS_LANGUAGE_MODEL } from './lib/routes';
@@ -32,7 +32,7 @@ export default function App() {
   // goes into state and every decision about it runs through the pure
   // module during render, so a failure that is not a refusal the user or the
   // host meant shows as a failed recents section, with its code, instead of
-  // masquerading as "recents are off" or taking the page down (R3-898).
+  // masquerading as "recents are off" or taking the page down.
   const [raw, setRaw] = useState<RawRecents>();
 
   useEffect(() => {
@@ -42,8 +42,8 @@ export default function App() {
       (projects) => {
         if (alive) setRaw({ projects, now });
       },
-      (err: RecentRefusal) => {
-        if (alive) setRaw({ projects: err, now });
+      (err: unknown) => {
+        if (alive) setRaw({ projects: asRefusal(err), now });
       },
     );
     return () => {
@@ -111,6 +111,11 @@ export default function App() {
           }
         }}
       />
+      {/* Mounted from the first render, so the failure is announced when it
+          lands (a live region inserted already holding its text often is not). */}
+      <p className="sr-only" role="status">
+        {recents?.kind === 'failed' ? 'Your recent projects could not be loaded.' : ''}
+      </p>
       {recents !== undefined && raw !== undefined && (
         <RecentProjects
           state={recents}

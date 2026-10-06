@@ -157,24 +157,41 @@ describe('App', () => {
     expect(container.querySelector('.rec')).toBeNull();
   });
 
-  it('a forbidden or declined refusal renders the off line', async () => {
-    for (const code of ['forbidden', 'cancelled']) {
-      mockList.mockRejectedValue({ code });
-      const view = render(<App />);
-      await screen.findByText('Recents are off for this version of Home.');
-      expect(screen.getByText('Recent projects.')).toBeDefined();
-      view.unmount();
-    }
+  it('a forbidden refusal renders the version off line; a declined consent names the user\'s choice', async () => {
+    mockList.mockRejectedValue({ code: 'forbidden' });
+    const first = render(<App />);
+    await screen.findByText('Recents are off for this version of Home.');
+    first.unmount();
+
+    // The SDK's own producer for a Not now.
+    const { ProtocolCancelledError } = await vi.importActual<typeof import('@immediately-run/sdk')>('@immediately-run/sdk');
+    mockList.mockRejectedValue(new ProtocolCancelledError('recents:list'));
+    render(<App />);
+    await screen.findByText('You chose not to show recent projects. Home asks again next time.');
   });
 
-  it('any other refusal fails the recents section only: the page stays, the code is shown and logged (R3-898)', async () => {
-    mockList.mockRejectedValue({ code: 'timeout' });
+  it('a timed-out read fails the recents section only: the rest of the page stays, and the failure is shown, announced and logged', async () => {
+    const { ProtocolTimeoutError } = await vi.importActual<typeof import('@immediately-run/sdk')>('@immediately-run/sdk');
+    mockList.mockRejectedValue(new ProtocolTimeoutError('recents:list', 30_000, 'unattended'));
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const { container } = render(<App />);
+    // The live region exists before the read settles, so the failure is announced.
+    expect(container.querySelector('.sr-only[role="status"]')).not.toBeNull();
     await screen.findByText('Your recent projects could not be loaded (timeout).');
+    expect(container.querySelector('.sr-only[role="status"]')?.textContent).toBe('Your recent projects could not be loaded.');
     expect(container.querySelector('.btn')?.textContent).toBe('Make an app →');
-    expect(screen.getByText('Recent projects.')).toBeDefined();
+    expect(screen.getByText('/MODEL')).toBeDefined();
+    expect(screen.getByText('/NEWS')).toBeDefined();
     expect(errSpy).toHaveBeenCalledWith('home: recent projects read failed: timeout');
+    errSpy.mockRestore();
+  });
+
+  it('a rejection with no code at all is a failed section too, never a blank page', async () => {
+    mockList.mockRejectedValue(new Error('transport closed'));
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    render(<App />);
+    await screen.findByText('Your recent projects could not be loaded (unknown).');
+    expect(screen.getByText('/MODEL')).toBeDefined();
     errSpy.mockRestore();
   });
 });

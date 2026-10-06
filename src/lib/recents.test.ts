@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { RecentProject } from '@immediately-run/sdk';
-import { recentsHue, recentsState, relativeOpened } from './recents';
+import { asRefusal, recentsHue, recentsState, relativeOpened } from './recents';
 
 // Built field-by-field against the SDK's exported record type, so a field the
 // platform adds or renames breaks this construction at compile time (the same
@@ -23,14 +23,20 @@ describe('recentsState', () => {
   });
 
   it('a forbidden refusal is off', () => {
-    expect(recentsState({ code: 'forbidden' })).toEqual({ kind: 'off' });
+    expect(recentsState({ code: 'forbidden' })).toEqual({ kind: 'off', declined: false });
   });
 
   it('a declined consent is off — the user answered Not now', () => {
-    expect(recentsState({ code: 'cancelled' })).toEqual({ kind: 'off' });
+    expect(recentsState({ code: 'cancelled' })).toEqual({ kind: 'off', declined: true });
   });
 
-  it('any other refusal code is failed with its code — never off, and never a throw that takes the page (R3-898)', () => {
+  it('a rejection that carries no code is failed as unknown, never a throw', () => {
+    for (const err of [new Error('transport'), {}, 'boom', undefined, null, { code: 7 }]) {
+      expect(recentsState(asRefusal(err))).toEqual({ kind: 'failed', code: 'unknown' });
+    }
+  });
+
+  it('any other refusal code is failed with its code — never off, and never a throw that takes the page', () => {
     expect(recentsState({ code: 'invalid-params' })).toEqual({ kind: 'failed', code: 'invalid-params' });
     expect(recentsState({ code: 'timeout' })).toEqual({ kind: 'failed', code: 'timeout' });
   });

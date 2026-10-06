@@ -30,7 +30,7 @@ export default function RecentProjects({
   const [clearFailure, setClearFailure] = useState<string | null>(null);
 
   // A failed read is loud in the console once per arrival at the state, and
-  // visible in the section; the rest of the page stays (R3-898).
+  // visible in the section; the rest of the page stays.
   const failedCode = state.kind === 'failed' ? state.code : null;
   useEffect(() => {
     if (failedCode !== null) console.error(`home: recent projects read failed: ${failedCode}`);
@@ -61,9 +61,7 @@ export default function RecentProjects({
     return (
       <section className="rec" aria-label="Recent projects">
         <SectionHeading tag="/RECENT" title="Recent projects." />
-        <p className="rec-off" role="status">
-          Your recent projects could not be loaded ({state.code}).
-        </p>
+        <p className="rec-off">Your recent projects could not be loaded ({state.code}).</p>
       </section>
     );
   }
@@ -72,7 +70,11 @@ export default function RecentProjects({
     return (
       <section className="rec" aria-label="Recent projects">
         <SectionHeading tag="/RECENT" title="Recent projects." />
-        <p className="rec-off">Recents are off for this version of Home.</p>
+        <p className="rec-off">
+          {state.declined
+            ? 'You chose not to show recent projects. Home asks again next time.'
+            : 'Recents are off for this version of Home.'}
+        </p>
       </section>
     );
   }

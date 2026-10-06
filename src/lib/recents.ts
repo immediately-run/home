@@ -1,6 +1,6 @@
 import type { RecentProject } from '@immediately-run/sdk';
 
-// The recents section's decision layer — which of the three states renders,
+// The recents section's decision layer — which of its states renders,
 // how the list splits into featured + rest, and how a timestamp reads as
 // words. Pure and clock-free: `now` is always an argument, so the tests pin
 // it. The component layer (RecentProjects) only renders what a function from
@@ -11,27 +11,41 @@ export interface RecentRefusal {
   code: string;
 }
 
+/**
+ * Whatever the read rejected with, as a refusal. The SDK's typed errors carry a
+ * string `code`; a bare Error, a string or nothing at all (a transport fault)
+ * carries none, and reads as `unknown` so it still lands in a state rather than
+ * in a throw.
+ */
+export function asRefusal(err: unknown): RecentRefusal {
+  const code = typeof err === 'object' && err !== null && 'code' in err ? (err as { code: unknown }).code : undefined;
+  return { code: typeof code === 'string' && code !== '' ? code : 'unknown' };
+}
+
 export type RecentsState =
   | { kind: 'absent' }
-  | { kind: 'off' }
+  | { kind: 'off'; declined: boolean }
   | { kind: 'failed'; code: string }
   | { kind: 'list'; featured: RecentProject; rest: RecentProject[] };
 
 /**
  * The one decision of which recents surface renders. `null` (cleared or
- * never-used) is ABSENT — never an empty list, never an empty-state note
- * (R-OSO-22). A refusal the user or the host meant is `off`: `forbidden` (a
+ * never-used) is absent: never an empty list, never an empty-state note
+ * (R-OSO-22). A refusal the user or the host meant is off: `forbidden` (a
  * fork that has not been consented, or an app that is not the page.home
- * binding) and `cancelled` (the user answered the consent with Not now).
- * Anything else is FAILED, with its code: shown in the section and logged by
- * it, never read as "off" (which would hide the bug) and never thrown, since a
- * throw takes the whole page down for one optional section (R3-898).
+ * binding) and `cancelled` (the user answered the consent with Not now, which
+ * the section words as the user's own choice). Any other code is failed, with
+ * its code: shown in the section and logged there, never read as off (which
+ * would hide the bug) and never thrown, since a throw takes the whole page
+ * down for one optional section.
  */
 export function recentsState(result: RecentProject[] | null | RecentRefusal): RecentsState {
   if (result === null) return { kind: 'absent' };
-  if ('code' in result) {
-    if (result.code === 'forbidden' || result.code === 'cancelled') return { kind: 'off' };
-    return { kind: 'failed', code: result.code };
+  if (!Array.isArray(result)) {
+    const { code } = asRefusal(result);
+    if (code === 'forbidden') return { kind: 'off', declined: false };
+    if (code === 'cancelled') return { kind: 'off', declined: true };
+    return { kind: 'failed', code };
   }
   if (result.length === 0) return { kind: 'absent' };
   return { kind: 'list', featured: result[0], rest: result.slice(1) };
