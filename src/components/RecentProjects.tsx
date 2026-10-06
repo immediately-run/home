@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { clearRecentProjects } from '@immediately-run/sdk';
 import FeaturedProject from './FeaturedProject';
 import RecentRow from './RecentRow';
@@ -29,6 +29,13 @@ export default function RecentProjects({
   const [clearing, setClearing] = useState(false);
   const [clearFailure, setClearFailure] = useState<string | null>(null);
 
+  // A failed read is loud in the console once per arrival at the state, and
+  // visible in the section; the rest of the page stays.
+  const failedCode = state.kind === 'failed' ? state.code : null;
+  useEffect(() => {
+    if (failedCode !== null) console.error(`home: recent projects read failed: ${failedCode}`);
+  }, [failedCode]);
+
   if (state.kind === 'absent') return null;
 
   const clear = async () => {
@@ -50,11 +57,24 @@ export default function RecentProjects({
     }
   };
 
+  if (state.kind === 'failed') {
+    return (
+      <section className="rec" aria-label="Recent projects">
+        <SectionHeading tag="/RECENT" title="Recent projects." />
+        <p className="rec-off">Your recent projects could not be loaded ({state.code}).</p>
+      </section>
+    );
+  }
+
   if (state.kind === 'off') {
     return (
       <section className="rec" aria-label="Recent projects">
         <SectionHeading tag="/RECENT" title="Recent projects." />
-        <p className="rec-off">Recents are off for this version of Home.</p>
+        <p className="rec-off">
+          {state.declined
+            ? 'You chose not to show recent projects.'
+            : 'Recents are off for this version of Home.'}
+        </p>
       </section>
     );
   }

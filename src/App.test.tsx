@@ -1,7 +1,5 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { Component } from 'react';
-import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAuth, useFormFactor, listRecentProjects, listAllSpaces } from '@immediately-run/sdk';
 import App from './App';
@@ -159,36 +157,57 @@ describe('App', () => {
     expect(container.querySelector('.rec')).toBeNull();
   });
 
-  it('a forbidden refusal renders the off line; any other code reaches the error boundary', async () => {
+  it('a forbidden refusal renders the version off line; a declined consent names the user\'s choice', async () => {
     mockList.mockRejectedValue({ code: 'forbidden' });
     const first = render(<App />);
     await screen.findByText('Recents are off for this version of Home.');
-    expect(screen.getByText('Recent projects.')).toBeDefined();
     first.unmount();
 
-    mockList.mockRejectedValue({ code: 'invalid-params' });
+    // The SDK's own producer for a Not now.
+    const { ProtocolCancelledError } = await vi.importActual<typeof import('@immediately-run/sdk')>('@immediately-run/sdk');
+    mockList.mockRejectedValue(new ProtocolCancelledError('recents:list'));
+    render(<App />);
+    await screen.findByText('You chose not to show recent projects.');
+  });
+
+  it('a timed-out read fails the recents section only: the rest of the page stays, and the failure is shown, announced and logged', async () => {
+    const { ProtocolTimeoutError } = await vi.importActual<typeof import('@immediately-run/sdk')>('@immediately-run/sdk');
+    mockList.mockRejectedValue(new ProtocolTimeoutError('recents:list', 30_000, 'unattended'));
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const { container } = render(
-      <Boundary>
-        <App />
-      </Boundary>,
-    );
+    const { container } = render(<App />);
+    // The live region exists before the read settles, so the failure is announced.
+    expect(container.querySelector('.sr-only[role="status"]')).not.toBeNull();
+    await screen.findByText('Your recent projects could not be loaded (timeout).');
+    expect(container.querySelector('.sr-only[role="status"]')?.textContent).toBe('Your recent projects could not be loaded.');
+    expect(container.querySelector('.btn')?.textContent).toBe('Make an app →');
+    expect(screen.getByText('/MODEL')).toBeDefined();
+    expect(screen.getByText('/NEWS')).toBeDefined();
+    expect(errSpy).toHaveBeenCalledWith('home: recent projects read failed: timeout');
+    errSpy.mockRestore();
+  });
+
+  it('the live region exists while auth is still unknown, so a failure that lands first is announced', async () => {
+    mockAuth.mockReturnValue({ status: 'unknown', user: null });
+    const { ProtocolTimeoutError } = await vi.importActual<typeof import('@immediately-run/sdk')>('@immediately-run/sdk');
+    mockList.mockRejectedValue(new ProtocolTimeoutError('recents:list', 30_000, 'unattended'));
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { container, rerender } = render(<App />);
+    const region = container.querySelector('.sr-only[role="status"]');
+    expect(region).not.toBeNull();
     await act(async () => {});
-    expect(container.textContent).toContain('boundary-caught');
-    expect(container.querySelector('.rec-off')).toBeNull();
+    expect(region?.textContent).toBe('Your recent projects could not be loaded.');
+    mockAuth.mockReturnValue({ status: 'signed-in', user: null });
+    rerender(<App />);
+    await screen.findByText('Your recent projects could not be loaded (timeout).');
+    errSpy.mockRestore();
+  });
+
+  it('a rejection with no code at all is a failed section too, never a blank page', async () => {
+    mockList.mockRejectedValue(new Error('transport closed'));
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    render(<App />);
+    await screen.findByText('Your recent projects could not be loaded (unknown).');
+    expect(screen.getByText('/MODEL')).toBeDefined();
     errSpy.mockRestore();
   });
 });
-
-// Test-only boundary: proves a non-forbidden refusal THROWS out of render
-// (reaching whichever boundary the host frame mounts) instead of rendering
-// the "off" line, which would be a false claim about a fork's consent.
-class Boundary extends Component<{ children: ReactNode }, { failed: boolean }> {
-  state = { failed: false };
-  static getDerivedStateFromError() {
-    return { failed: true };
-  }
-  render() {
-    return this.state.failed ? <span>boundary-caught</span> : this.props.children;
-  }
-}

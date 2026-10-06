@@ -12,7 +12,7 @@ import LinkTile from './components/LinkTile';
 import RecentProjects from './components/RecentProjects';
 import Skeleton from './components/Skeleton';
 import Spaces from './components/Spaces';
-import { recentsState } from './lib/recents';
+import { asRefusal, recentsState } from './lib/recents';
 import type { RecentRefusal, RecentsState } from './lib/recents';
 import { primary } from './lib/primary';
 import { NOTIFICATIONS, SETTINGS_LANGUAGE_MODEL } from './lib/routes';
@@ -30,8 +30,9 @@ export default function App() {
   // The one read of the host-owned record, on mount — no polling, no
   // re-read on focus. The raw result (list, null, or the refusal's code)
   // goes into state and every decision about it runs through the pure
-  // module during render, so a failure that is not `forbidden` reaches the
-  // error boundary instead of masquerading as "recents are off".
+  // module during render, so a failure that is not a refusal the user or the
+  // host meant shows as a failed recents section, with its code, instead of
+  // masquerading as "recents are off" or taking the page down.
   const [raw, setRaw] = useState<RawRecents>();
 
   useEffect(() => {
@@ -41,8 +42,8 @@ export default function App() {
       (projects) => {
         if (alive) setRaw({ projects, now });
       },
-      (err: RecentRefusal) => {
-        if (alive) setRaw({ projects: err, now });
+      (err: unknown) => {
+        if (alive) setRaw({ projects: asRefusal(err), now });
       },
     );
     return () => {
@@ -70,9 +71,20 @@ export default function App() {
     if (omniboxOpen) focusHeroOmnibox();
   }, [omniboxOpen]);
 
+  // Mounted in every branch that renders, from the first render on, so the
+  // failure is announced when it lands (a live region inserted already holding
+  // its text often is not). Its decision reads `raw` directly, because the auth
+  // branch below returns before `recents` is computed.
+  const liveRegion = (
+    <p className="sr-only" role="status">
+      {raw !== undefined && recentsState(raw.projects).kind === 'failed' ? 'Your recent projects could not be loaded.' : ''}
+    </p>
+  );
+
   if (status === 'unknown') {
     return (
       <div className={`page page--${formFactor.class}`}>
+        {liveRegion}
         <Skeleton />
       </div>
     );
@@ -110,6 +122,7 @@ export default function App() {
           }
         }}
       />
+      {liveRegion}
       {recents !== undefined && raw !== undefined && (
         <RecentProjects
           state={recents}

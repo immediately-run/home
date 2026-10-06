@@ -65,7 +65,7 @@ describe('RecentProjects', () => {
   });
 
   it('the off state renders the section heading and the one sentence, and no rows', () => {
-    const { container } = render(<RecentProjects now={NOW} state={{ kind: 'off' }} primary={false} mobile={false} onCleared={() => {}} />);
+    const { container } = render(<RecentProjects now={NOW} state={{ kind: 'off', declined: false }} primary={false} mobile={false} onCleared={() => {}} />);
     expect(screen.getByText('Recent projects.')).toBeDefined();
     expect(screen.getByText('Recents are off for this version of Home.')).toBeDefined();
     expect(container.querySelectorAll('.rec-row')).toHaveLength(0);
