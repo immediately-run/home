@@ -71,9 +71,20 @@ export default function App() {
     if (omniboxOpen) focusHeroOmnibox();
   }, [omniboxOpen]);
 
+  // Mounted in every branch that renders, from the first render on, so the
+  // failure is announced when it lands (a live region inserted already holding
+  // its text often is not). Its decision reads `raw` directly, because the auth
+  // branch below returns before `recents` is computed.
+  const liveRegion = (
+    <p className="sr-only" role="status">
+      {raw !== undefined && recentsState(raw.projects).kind === 'failed' ? 'Your recent projects could not be loaded.' : ''}
+    </p>
+  );
+
   if (status === 'unknown') {
     return (
       <div className={`page page--${formFactor.class}`}>
+        {liveRegion}
         <Skeleton />
       </div>
     );
@@ -111,11 +122,7 @@ export default function App() {
           }
         }}
       />
-      {/* Mounted from the first render, so the failure is announced when it
-          lands (a live region inserted already holding its text often is not). */}
-      <p className="sr-only" role="status">
-        {recents?.kind === 'failed' ? 'Your recent projects could not be loaded.' : ''}
-      </p>
+      {liveRegion}
       {recents !== undefined && raw !== undefined && (
         <RecentProjects
           state={recents}

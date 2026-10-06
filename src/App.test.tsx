@@ -167,7 +167,7 @@ describe('App', () => {
     const { ProtocolCancelledError } = await vi.importActual<typeof import('@immediately-run/sdk')>('@immediately-run/sdk');
     mockList.mockRejectedValue(new ProtocolCancelledError('recents:list'));
     render(<App />);
-    await screen.findByText('You chose not to show recent projects. Home asks again next time.');
+    await screen.findByText('You chose not to show recent projects.');
   });
 
   it('a timed-out read fails the recents section only: the rest of the page stays, and the failure is shown, announced and logged', async () => {
@@ -183,6 +183,22 @@ describe('App', () => {
     expect(screen.getByText('/MODEL')).toBeDefined();
     expect(screen.getByText('/NEWS')).toBeDefined();
     expect(errSpy).toHaveBeenCalledWith('home: recent projects read failed: timeout');
+    errSpy.mockRestore();
+  });
+
+  it('the live region exists while auth is still unknown, so a failure that lands first is announced', async () => {
+    mockAuth.mockReturnValue({ status: 'unknown', user: null });
+    const { ProtocolTimeoutError } = await vi.importActual<typeof import('@immediately-run/sdk')>('@immediately-run/sdk');
+    mockList.mockRejectedValue(new ProtocolTimeoutError('recents:list', 30_000, 'unattended'));
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { container, rerender } = render(<App />);
+    const region = container.querySelector('.sr-only[role="status"]');
+    expect(region).not.toBeNull();
+    await act(async () => {});
+    expect(region?.textContent).toBe('Your recent projects could not be loaded.');
+    mockAuth.mockReturnValue({ status: 'signed-in', user: null });
+    rerender(<App />);
+    await screen.findByText('Your recent projects could not be loaded (timeout).');
     errSpy.mockRestore();
   });
 

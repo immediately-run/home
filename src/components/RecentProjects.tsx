@@ -72,7 +72,7 @@ export default function RecentProjects({
         <SectionHeading tag="/RECENT" title="Recent projects." />
         <p className="rec-off">
           {state.declined
-            ? 'You chose not to show recent projects. Home asks again next time.'
+            ? 'You chose not to show recent projects.'
             : 'Recents are off for this version of Home.'}
         </p>
       </section>
