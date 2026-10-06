@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@immediately-run/omnibox": "github:immediately-run/omnibox#257bd8cadf57da82774294b505f592c930e86416",
-    "@immediately-run/sdk": "0.61.0",
+    "@immediately-run/sdk": "0.84.1",
     "react": "^19.2.5",
     "react-dom": "^19.2.5"
   },
