@@ -18,10 +18,12 @@ export default defineConfig({
     react(),
   ],
   test: {
-    // The @immediately-run/* dists ship extensionless relative ESM imports
-    // (`./sandboxUtils`), which Vite's resolver accepts but Node's — used for
-    // externalized deps in vitest — rejects. Inlining routes them through Vite's
-    // resolver instead, in tests only; `vite build` was never affected.
-    server: { deps: { inline: ['@immediately-run/sdk', '@immediately-run/omnibox'] } },
+    // @immediately-run/omnibox's dist ships extensionless relative ESM imports
+    // (`./omniboxStyles`), which Vite's resolver accepts but Node's — used for
+    // externalized deps in vitest — rejects. Inlining routes it through Vite's
+    // resolver instead, in tests only; `vite build` was never affected. The SDK
+    // was on this list for the same reason until its dist gained explicit `.js`
+    // specifiers (it has them at the 0.90.0 pin), so Node resolves it as it is.
+    server: { deps: { inline: ['@immediately-run/omnibox'] } },
   },
 })

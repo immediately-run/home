@@ -172,7 +172,7 @@ describe('App', () => {
 
   it('a timed-out read fails the recents section only: the rest of the page stays, and the failure is shown, announced and logged', async () => {
     const { ProtocolTimeoutError } = await vi.importActual<typeof import('@immediately-run/sdk')>('@immediately-run/sdk');
-    mockList.mockRejectedValue(new ProtocolTimeoutError('recents:list', 30_000, 'unattended'));
+    mockList.mockRejectedValue(new ProtocolTimeoutError('recents:list', 30_000, 'attended', 'idle'));
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const { container } = render(<App />);
     // The live region exists before the read settles, so the failure is announced.
@@ -189,7 +189,7 @@ describe('App', () => {
   it('the live region exists while auth is still unknown, so a failure that lands first is announced', async () => {
     mockAuth.mockReturnValue({ status: 'unknown', user: null });
     const { ProtocolTimeoutError } = await vi.importActual<typeof import('@immediately-run/sdk')>('@immediately-run/sdk');
-    mockList.mockRejectedValue(new ProtocolTimeoutError('recents:list', 30_000, 'unattended'));
+    mockList.mockRejectedValue(new ProtocolTimeoutError('recents:list', 30_000, 'attended', 'idle'));
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const { container, rerender } = render(<App />);
     const region = container.querySelector('.sr-only[role="status"]');
